@@ -67,7 +67,7 @@ void PortF_Config(void)
 
     // NVIC Configuration: PortF interrupts correspond to interrupt 30 (EN0 and PRI7 registers)
     NVIC_EN0_R |= (1<<30);              // Interrupts enabled for port F
-    NVIC_PRI7_R &= 0xFF2FFFFF;          //Interrupt Priority 1 to Port F
+    NVIC_PRI7_R |= 0xFF2FFFFF;          //Interrupt Priority 1 to Port F
 }
 
 void UART_Config(void)
@@ -92,7 +92,7 @@ void UART_Config(void)
     UART4_IM_R |= (1<<4);                   // Enable Rx interrupt
     // NVIC Configuration: UART4 interrupt corresponds to interrupt 60 (EN1 and PRI15 registers)
     NVIC_EN1_R |= (1<<28);                 // Interrupt enabled for UART4
-    NVIC_PRI15_R &= 0xFFFFFF4F;           // Interrupt Priority 2 to UART4
+    NVIC_PRI15_R |= 0xFFFFFF4F;           // Interrupt Priority 2 to UART4
 
     GPIO_PORTC_LOCK_R = GPIO_LOCK_KEY;    // Unlock PortC register
     GPIO_PORTC_CR_R = 0xFF;              // Enable Commit function
@@ -104,7 +104,7 @@ void UART_Config(void)
 
 void Systick_Config(void)
 {
-NVIC_ST_RELOAD_R = 16*1000000/2;                 // Run Systick for 0.5 second
+NVIC_ST_RELOAD_R = 16*1000000/2 ;                 // Run Systick for 0.5 second
 NVIC_ST_CURRENT_R = 0x00;                       // Initialize Systick Current value to zero
 NVIC_ST_CTRL_R |= (ENABLE | INT_EN | Clk_SRC); // Enable Systick, Interrupt Generation, system clock
 }

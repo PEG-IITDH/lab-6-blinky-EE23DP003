@@ -33,10 +33,9 @@ void ResetISR(void);
 static void NmiSR(void);
 static void FaultISR(void);
 static void IntDefaultHandler(void);
-extern void PortF_Handler(void);
-extern void UART_Handler(void);
-extern void Systick_Handler(void);
-
+void PortF_Handler(void);     // GPIO Port F Interrupt Handler
+void UART_Handler(void);     // UART Interrupt Handler
+void Systick_Handler(void); //Systick Interrupt Handler
 //*****************************************************************************
 //
 // External declaration for the reset handler that is to be called when the
@@ -146,7 +145,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // SSI2 Rx and Tx
     IntDefaultHandler,                      // SSI3 Rx and Tx
     IntDefaultHandler,                      // UART3 Rx and Tx
-    UART_Handler,                        // UART4 Rx and Tx
+    UART_Handler,                      // UART4 Rx and Tx
     IntDefaultHandler,                      // UART5 Rx and Tx
     IntDefaultHandler,                      // UART6 Rx and Tx
     IntDefaultHandler,                      // UART7 Rx and Tx

@@ -23,7 +23,7 @@ Part 1: Create a PWM signal with a frequency of 100KHz and initial duty cycle of
 ## Assumptions, Constraints and Requirements:
 
 * Assumption: Switch debounce is not considered since interrupts are used and polling method is not used.
-### Requirements: 
+#### Requirements: 
 * The initial duty cycle is set as 50 and loaded into the Duty variable.
 * The PWM is generated on pin PF2 (Blue LED) and LED brightness varies with PWM duty change.
 * The PWM is initialized in down count mode where the output is high at the start of the period and low when the counter matches comparator A.
@@ -37,6 +37,7 @@ Part 1: Create a PWM signal with a frequency of 100KHz and initial duty cycle of
 
 ## Block diagram / Flowchart:
 
+
 <img src="images/TwoSwitch_PWM.png" alt="State Diagram of duty cycle increment / decrement by 5% using two onboard switches" width="500"/>
 
 *State Diagram of duty cycle increment / decrement by 5% using two onboard switches*
@@ -45,10 +46,8 @@ Start --> Define the PWM the PWM Frequency, PWM Period and PWM Start Duty. Initi
  
 ## Code:
 
-	/* 
-	* Lab7 Part1 PWM Waveform 100KHz on pin PF2 (Blue LED), 
-	* Initial duty cycle=50%, variable duty cycle depending on switch press 
-	* SW1 increases duty cycle by 5%, SW2 decreases duty cycle by 5% 
+	/* Lab7 Part1:  PWM Waveform 100KHz with variable duty cycle on pin PF2 (Blue LED)
+	*  Initial duty cycle=50%, SW1 increases duty cycle by 5%, SW2 decreases duty cycle by 5% 
 	*/
 
 	#include <stdint.h>
@@ -66,14 +65,14 @@ Start --> Define the PWM the PWM Frequency, PWM Period and PWM Start Duty. Initi
 	int main(void)
 	{
 
-   	GPIO_Init();  //Initialize GPIO for pin PF0, PF4
+    	GPIO_Init();  //Initialize GPIO for pin PF0, PF4
     	PWM_Init();   //Initialize PWM for pin PF0, PF4
 
 
     	while (1)
-    		{
+    	{
         	//wait indefinitely
-    		}
+    	}
 	}
 
 
@@ -93,7 +92,7 @@ Start --> Define the PWM the PWM Frequency, PWM Period and PWM Start Duty. Initi
     	GPIO_PORTF_IS_R &= ~0x11;     // Interrupt Sense: Edge-sensitive
     	GPIO_PORTF_IBE_R &= ~0x11;   // Interrupt Both Edges: Not both edges
     	GPIO_PORTF_IEV_R &= ~0x11;  // Interrupt Event: Falling edge event
-    	GPIO_PORTF_ICR_R |= 0x11;  // Interrupt Clear: Clear the interrupt flags for PF0 , PF4
+   	GPIO_PORTF_ICR_R |= 0x11;  // Interrupt Clear: Clear the interrupt flags for PF0 , PF4
     	GPIO_PORTF_IM_R |= 0x11;  // Interrupt Mask: Unmask (Enable) interrupt on PF0 , PF4
     	NVIC_EN0_R |= 1 << 30;   // Interrupt Enable: Enable interrupt for GPIO PF0 (bit 30)
 	}
@@ -115,7 +114,7 @@ Start --> Define the PWM the PWM Frequency, PWM Period and PWM Start Duty. Initi
     	//Configure Module 1 PWM Generator 3 which controls Module 1 PWM6 (M1PWM6) on pin PF2
     	PWM1_3_CTL_R = 0;             // Disable PWM while configuring
     	PWM1_3_GENA_R = 0x0000008C;  /* Down Count: M1PWM6 output is high at the start of the period
-                                   and low when the counter matches comparator A */
+                                        and low when the counter matches comparator A */
     	PWM1_3_LOAD_R = PWM_PERIOD - 1;             // Set PWM period
     	PWM1_3_CMPA_R = (PWM_PERIOD * Duty) / 100; // Set Compare A value, consider initial duty
     	PWM1_3_CTL_R |= 0x00000001;               // Enable PWM1 Generator 3

@@ -48,9 +48,9 @@ void GPIO_Init(void)
     GPIO_PORTF_IS_R &= ~0x10;     // Interrupt Sense: Edge-sensitive
     GPIO_PORTF_IBE_R &= ~0x10;   // Interrupt Both Edges: Not both edges
     GPIO_PORTF_IEV_R &= ~0x10;  // Interrupt Event: Falling edge event
-    GPIO_PORTF_ICR_R |= 0x10;  // Interrupt Clear: Clear the interrupt flags for PF0 , PF4
-    GPIO_PORTF_IM_R |= 0x10;  // Interrupt Mask: Unmask (Enable) interrupt on PF0 , PF4
-    NVIC_EN0_R |= 1 << 30;   // Interrupt Enable: Enable interrupt for GPIO PF0 (bit 30)
+    GPIO_PORTF_ICR_R |= 0x10;  // Interrupt Clear: Clear the interrupt flags for PF4
+    GPIO_PORTF_IM_R |= 0x10;  // Interrupt Mask: Unmask (Enable) interrupt on PF4
+    NVIC_EN0_R |= 1 << 30;   // Interrupt Enable: Enable interrupt for GPIO Port F (bit 30)
 }
 
 

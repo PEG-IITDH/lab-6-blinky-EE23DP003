@@ -1,4 +1,4 @@
-# Lab 7: PWM Generation with varying duty cycle using single switch
+# Lab 7 Part-2: PWM Generation with varying duty cycle using single switch
 
 Group 10: EE23DP003 Daniel Dsa; 222021006 Pradeep Kumar M
 
@@ -34,7 +34,7 @@ Implement using only 1 switch (SW1 OR SW2) – short press for d increase and lo
 ## Assumptions, Constraints and Requirements:
 
 * Assumption: Switch debounce is not considered since interrupts are used and polling method is not used.
-#### Requirements: 
+### Requirements: 
 * The initial duty cycle is set as 50 and loaded into the Duty variable.
 * The PWM is generated on pin PF2 (Blue LED) and LED brightness varies with PWM duty change.
 * The PWM is initialied in down count mode where the output is high at the start of the period and low when the counter matches comparator A.
@@ -48,18 +48,17 @@ Implement using only 1 switch (SW1 OR SW2) – short press for d increase and lo
 
 ## Block diagram / Flowchart:
 
-<img src="images/SingleSwitch_PWM.png" alt="State Diagram of duty cycle increment / decrement by 5% using single switch SW1" width="500"/>
+<img src="images/images/SingleSwitch_PWM.png" alt="State Diagram of duty cycle increment / decrement by 5% using single switch SW1" width="500"/>
 
 *State Diagram of duty cycle increment / decrement by 5% using single switch SW1*
+
 
 Start --> Define the PWM the PWM Frequency, PWM Period and PWM Start Duty. Initialise the current Duty as the PWM Start Duty.  -->  In the main() program, call the GPIO and PWM initialization functions.  --> The GPIO initialization function configures PF4 pin (SW1) to function as GPIO input. Interrupt with falling edge detect are enabled on PF4. -->  The PWM initialization function  configures pin PF2 (blue LED) as the PWM pin. The Module 1 PWM generator 3 is configured to create a 100KHz PWM waveform. The counter of this PWM generator is configured to operate in down counting mode.  -->  Wait indefinitely in the main program using while(1) loop till the GPIO interrupt occurs. -->  In The GPIOF_Handler function, mask further interrupts from PF4 and initialize the SysTick timer for 1 second down count. -->  In the Systick Handler function, disable the SysTick Timer, Check if SW1 caused is still pressed --> If still pressed it implies long press, check if duty cycle is less than maximum duty cylcle of 95% -->  If yes, increase duty by 5. This increases CMPA value and decreases duty cycle. If SW1 not pressed it implies short press, check if duty cycle is greater than minimum duty cylcle of 5% -->  If yes, decrease duty by 5. This decreases CMPA value and increases the duty cycle. --> Clear the PF4 interrupt and unmask (enable) interrupts from PF4 -->  Return to the while(1) loop and wait till the GPIO interrupt occurrs again.
 
 ## Code:
 
-	/* 
-	* Lab 7 Part 2:  PWM Waveform 100KHz with variable duty cycle on pin PF2 (Blue LED)
-	* Initial duty cycle=50%, variable dututy cycle depending on switch short / long press
-	* SW1: short press increases duty cycle by 5%, long press decreases duty by 5% 
+	/* Lab 7 Part 2:  PWM Waveform 100KHz with variable duty cycle on pin PF2 (Blue LED)
+	 * Initial duty cycle=50%, SW1: short press increases duty cycle by 5%, long press decreases duty by 5% 
 	*/
 
 	#include <stdint.h>
@@ -99,7 +98,7 @@ Start --> Define the PWM the PWM Frequency, PWM Period and PWM Start Duty. Initi
     	while ((SYSCTL_PRGPIO_R & SYSCTL_PRGPIO_R5) == 0); // Wait for GPIO PortF peripheral to be ready
 
     	// Configure SW1 (PF4) as input
-   	 GPIO_PORTF_LOCK_R = GPIO_LOCK_KEY; // Unlock GPIO PortF
+    	GPIO_PORTF_LOCK_R = GPIO_LOCK_KEY; // Unlock GPIO PortF
     	GPIO_PORTF_CR_R = 0x01;           // Uncommit and Allow changes to PF0 (SW2 not used)
     	GPIO_PORTF_DIR_R &= ~(0x10);     // Direction: PF4 as input
     	GPIO_PORTF_DEN_R |= 0x10;       // Digital Enable: bit 4
@@ -109,9 +108,9 @@ Start --> Define the PWM the PWM Frequency, PWM Period and PWM Start Duty. Initi
     	GPIO_PORTF_IS_R &= ~0x10;     // Interrupt Sense: Edge-sensitive
     	GPIO_PORTF_IBE_R &= ~0x10;   // Interrupt Both Edges: Not both edges
     	GPIO_PORTF_IEV_R &= ~0x10;  // Interrupt Event: Falling edge event
-    	GPIO_PORTF_ICR_R |= 0x10;  // Interrupt Clear: Clear the interrupt flags for PF0 , PF4
-    	GPIO_PORTF_IM_R |= 0x10;  // Interrupt Mask: Unmask (Enable) interrupt on PF0 , PF4
-    	NVIC_EN0_R |= 1 << 30;   // Interrupt Enable: Enable interrupt for GPIO PF0 (bit 30)
+    	GPIO_PORTF_ICR_R |= 0x10;  // Interrupt Clear: Clear the interrupt flags for PF4
+    	GPIO_PORTF_IM_R |= 0x10;  // Interrupt Mask: Unmask (Enable) interrupt on PF4
+    	NVIC_EN0_R |= 1 << 30;   // Interrupt Enable: Enable interrupt for GPIO Port F (bit 30)
 	}
 
 
@@ -131,7 +130,7 @@ Start --> Define the PWM the PWM Frequency, PWM Period and PWM Start Duty. Initi
     	//Configure Module 1 PWM Generator 3 which controls Module 1 PWM6 (M1PWM6) on pin PF2
     	PWM1_3_CTL_R = 0;             // Disable PWM while configuring
     	PWM1_3_GENA_R = 0x0000008C;  /* Down Count: M1PWM6 output is high at the start of the period
-                                     and low when the counter matches comparator A */
+                                   	and low when the counter matches comparator A */
     	PWM1_3_LOAD_R = PWM_PERIOD - 1;             // Set PWM period
     	PWM1_3_CMPA_R = (PWM_PERIOD * Duty) / 100; // Set Compare A value, consider initial duty
     	PWM1_3_CTL_R |= 0x00000001;               // Enable PWM1 Generator 3
@@ -150,26 +149,27 @@ Start --> Define the PWM the PWM Frequency, PWM Period and PWM Start Duty. Initi
 	{
     	GPIO_PORTF_IM_R &= ~0x10;     // Disable interrupt from PF4
     	SysTick_Init();
+
 	}
 
 	void SysTick_Handler(void)
 	{
     	NVIC_ST_CTRL_R = 0;  // Disable the SysTick timer
-        	if ( (GPIO_PORTF_DATA_R & (1<<4)) == 0 )   // Long Press: Check if switch SW1 still pressed after one sec
-        	{
-            	if (Duty < 95)      // Check if duty cycle is less than max value 95
-                	{
-                    	Duty += 5; // Increase duty by 5, this increases CMPA value and decreases duty cycle
-                	}
+        if ( (GPIO_PORTF_DATA_R & (1<<4)) == 0 )   // Long Press: Check if switch SW1 still pressed after one sec
+        {
+            if (Duty < 95)      // Check if duty cycle is less than max value 95
+                {
+                    Duty += 5; // Increase duty by 5, this increases CMPA value and decreases duty cycle
+                }
 
-        	}
-        	else                       // Short Press of SW1
-        	{
-            	if (Duty > 5)         // Check if duty cycle is greater than min value 5%
-                	{
-                    	Duty -= 5;    // Decrease duty by 5, this decreases CMPA value and increases duty cycle
-                	}
-        	}
+        }
+        else                       // Short Press of SW1
+        {
+            if (Duty > 5)         // Check if duty cycle is greater than min value 5%
+                {
+                    Duty -= 5;    // Decrease duty by 5, this decreases CMPA value and increases duty cycle
+                }
+        }
 
 
     	PWM1_3_CMPA_R = (PWM_PERIOD * Duty) / 100; // Update PWM1 Generator 3 Compare A value

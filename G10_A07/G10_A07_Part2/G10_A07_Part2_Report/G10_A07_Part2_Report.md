@@ -48,7 +48,7 @@ Implement using only 1 switch (SW1 OR SW2) – short press for d increase and lo
 
 ## Block diagram / Flowchart:
 
-<img src="images/images/SingleSwitch_PWM.png" alt="State Diagram of duty cycle increment / decrement by 5% using single switch SW1" width="500"/>
+<img src="images/SingleSwitch_PWM.png" alt="State Diagram of duty cycle increment / decrement by 5% using single switch SW1" width="500"/>
 
 *State Diagram of duty cycle increment / decrement by 5% using single switch SW1*
 

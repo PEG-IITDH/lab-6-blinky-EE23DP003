@@ -26,7 +26,7 @@ The algorithm for implementing UART data transmit and receive is shown in the st
 
 <img src="images/UART_LED_Stateflow.png" alt="Stateflow diagram for UART" width="650"/>
 
-*Stateflow diagram for UART data transmit and receive *
+*Stateflow diagram for UART data transmit and receive*
 
 
 ## Code:

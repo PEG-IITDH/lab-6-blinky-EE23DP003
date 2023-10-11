@@ -37,7 +37,8 @@ Part 1: Create a PWM signal with a frequency of 100KHz and initial duty cycle of
 
 ## Block diagram / Flowchart:
 
-![State Diagram of Task 1](images/TwoSwitch_PWM.png)
+<img src="images/TwoSwitch_PWM.png" alt="State Diagram of duty cycle increment / decrement by 5% using two onboard switches" width="500"/>
+
 *State Diagram of duty cycle increment / decrement by 5% using two onboard switches*
 
 Start --> Define the PWM the PWM Frequency, PWM Period and PWM Start Duty. Initialise the current Duty as the PWM Start Duty.  -->  In the main() program, call the GPIO and PWM initialization functions.  --> The GPIO initialization function configures PF0 (SW2) and PF4 pins (SW1) to function as GPIO inputs. Interrupts with falling edge detect are enabled on PF0 and PF4. -->  The PWM initialization function  configures pin PF2 (blue LED) as the PWM pin. The Module 1 PWM generator 3 is configured to create a 100KHz PWM waveform. The counter of this PWM generator is configured to operate in down counting mode.  -->  Wait indefinitely in the main program using while(1) loop till the GPIO interrupt occurs. -->  In The GPIOF_Handler function, check which switch has caused the interrupt by checking status of Raw Interrupt Status Register. -->  If SW1 caused the interrupt, check if duty cycle is less than maximum duty cylcle of 95% -->  If yes, increase duty by 5. This increases CMPA value and decreases duty cycle. Clear the PF4 interrupt. If SW1 did not cause the interrupt, do nothing.  -->  If SW2 caused the interrupt, check if duty cycle is greater than minimum duty cylcle of 5% -->  If yes, decrease duty by 5. This decreases CMPA value and increases the duty cycle. Clear the PF0 interrupt. If SW2 did not cause the interrupt, do nothing. -->  Return to the while(1) loop and wait till the GPIO interrupt occurrs again.

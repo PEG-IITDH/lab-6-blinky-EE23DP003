@@ -23,7 +23,7 @@ Part 1: Create a PWM signal with a frequency of 100KHz and initial duty cycle of
 ## Assumptions, Constraints and Requirements:
 
 * Assumption: Switch debounce is not considered since interrupts are used and polling method is not used.
-#### Requirements: 
+### Requirements: 
 * The initial duty cycle is set as 50 and loaded into the Duty variable.
 * The PWM is generated on pin PF2 (Blue LED) and LED brightness varies with PWM duty change.
 * The PWM is initialized in down count mode where the output is high at the start of the period and low when the counter matches comparator A.
@@ -44,8 +44,10 @@ Start --> Define the PWM the PWM Frequency, PWM Period and PWM Start Duty. Initi
  
 ## Code:
 
-/* Lab7 Part1:  PWM Waveform 100KHz with variable duty cycle on pin PF2 (Blue LED)
-Initial duty cycle=50%, SW1 increases duty cycle by 5%, SW2 decreases duty cycle by 5% */
+/* 
+* Lab7 Part1:  PWM Waveform 100KHz with variable duty cycle on pin PF2 (Blue LED)
+* Initial duty cycle=50%, SW1 increases duty cycle by 5%, SW2 decreases duty cycle by 5% 
+*/
 
 #include <stdint.h>
 #include "tm4c123gh6pm.h"

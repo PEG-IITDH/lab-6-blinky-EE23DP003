@@ -46,8 +46,8 @@ Start --> Define the PWM the PWM Frequency, PWM Period and PWM Start Duty. Initi
 
 	/* 
 	* Lab7 Part1 PWM Waveform 100KHz on pin PF2 (Blue LED), 
-	* Initial duty cycle=50%, variable duty cycle 
-	* SW1 increases duty cycle by 5%SW2 decreases duty cycle by 5% 
+	* Initial duty cycle=50%, variable duty cycle depending on switch press 
+	* SW1 increases duty cycle by 5%, SW2 decreases duty cycle by 5% 
 	*/
 
 	#include <stdint.h>

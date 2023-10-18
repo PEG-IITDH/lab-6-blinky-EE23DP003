@@ -1,5 +1,5 @@
 /* Lab7 Part1:  PWM Waveform 100KHz with variable duty cycle on pin PF2 (Blue LED)
-Initial duty cycle=50%, SW1 increases duty cycle by 5%, SW2 decreases duty cycle by 5% */
+Initial duty cycle=50%, SW1 decreases duty cycle by 5%, SW2 increases duty cycle by 5% */
 
 #include <stdint.h>
 #include "tm4c123gh6pm.h"

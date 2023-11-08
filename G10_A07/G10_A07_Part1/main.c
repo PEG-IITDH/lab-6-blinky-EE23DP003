@@ -13,7 +13,8 @@ volatile uint32_t Duty = PWM_START_DUTY;  // Initialize duty cycle to 50
 void GPIO_Init(void);   // GPIO Init function declaration
 void PWM_Init(void);   // PWM Init function declaration
 
-int main(void)
+
+void main(void)
 {
 
     GPIO_Init();  //Initialize GPIO for pin PF0, PF4

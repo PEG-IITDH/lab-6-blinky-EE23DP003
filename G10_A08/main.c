@@ -20,7 +20,7 @@
 
 #define Red 0X02        // Red LED = PF1
 #define Blue 0X04       // Blue LED = PF2
-#define Green 0X08      // Green LED = PF3
+#define Green 0X08      // Green LED =PF3
 
 //Definitions to configure systick CSR(Control and Status Register)
 #define ENABLE (1<<0)       // bit 0 of CSR enables systick counter
@@ -157,3 +157,5 @@ void Systick_Handler(void)
     GPIO_PORTF_IM_R |= Sw_Bits;   // Unmask (Enable) interrupts from SW1 and SW2
     UART4_IM_R |= (1<<4);        // Unmask (Enable) UART4 Rx interrupt
 }
+
+

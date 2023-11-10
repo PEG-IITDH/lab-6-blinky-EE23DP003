@@ -40,7 +40,7 @@ There are many sentences in the NMEA standard. The two types of GPS NMEA sentenc
 $GPGLL provides time, latitude, longitude.
 $GPRMC provides time, date, latitude, longitude, altitude, and estimated velocity.
 
-<img src="images/GPLL_Table.png" alt="GPGLL Table" width="650"/>
+<img src="images/GPGLL_Table.png" alt="GPGLL Table" width="650"/>
 
 *Geographic Position Latitude / Longitude (GPGLL) NMEA Sentence Table*
 

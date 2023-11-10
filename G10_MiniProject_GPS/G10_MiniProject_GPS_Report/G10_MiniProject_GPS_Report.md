@@ -15,7 +15,7 @@ Group 10: EE23DP003 Daniel Dsa; 222021006 Pradeep Kumar M
 * 'Data_Send()' function sends the GPS data (date, time, latitude, longitude) over UART0 that can be viewed in the serial terminal window. 
 
 ## Flowchart:
-<img src="images/Mini_Project_Flowchart.png" alt="Mini Project Flowchart for GPS" width="650"/>
+<img src="images/Mini_Project_Flowchart.png" alt="Mini Project Flowchart for GPS" width="950"/>
 
 *Flowchart for reception, parsing the and transmitting GPS data back on UART*
 
@@ -26,7 +26,7 @@ Group 10: EE23DP003 Daniel Dsa; 222021006 Pradeep Kumar M
 
 *The required data pins of the NEO-6M GPS chip are broken out to a 0.1″ pitch headers. It contains the pins needed for communication with the microcontroller over UART. The module supports baud rates from 4800bps to 230400bps with a default baud of 9600.
 
-<img src="images/neo6m.png" alt="neo6m GPS module" width="650"/>
+<img src="images/neo6m.png" alt="neo6m GPS module" width="450"/>
 
 *NEO-6M GPS module and antenna*
 
@@ -51,11 +51,11 @@ $GPRMC provides time, date, latitude, longitude, altitude, and estimated velocit
 ## Results:
 * The pins PE4 (U5Rx) on the TM4C123GH6PM microcontroller is connected to the Tx pin of the NEO-6M GPS module. The parsed data is transmitted over UART0 pin PA1(Tx) and can be viewed in the serial termnial window in Code Composer Studio.
 
-<img src="images/GPGLL.jpg" alt="GPGLL string received on UART5 " width="650"/>
+<img src="images/GPGLL.jpg" alt="GPGLL string received on UART5 " width="850"/>
 
 *Display of Latitude, Longitude and Time in Serial Terminal window after parsing $GPGLL string*
 
-<img src="images/GPGLL.jpg" alt="GPGLL string received on UART5 " width="650"/>
+<img src="images/GPRMC.jpg" alt="GPGLL string received on UART5 " width="850"/>
 
 *Display of Latitude, Longitude, Time. Date and Sppeed in Serial Terminal window after parsing $GPRMC string*
 

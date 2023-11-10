@@ -62,18 +62,18 @@ $GPRMC provides time, date, latitude, longitude, altitude, and estimated velocit
 
 * The latitude and longitude data seen in the terminal window for the GPRMC or GPGLL data can be viewed in Google maps by converting the ddmm.mmmm format for latitude and dddmm.mmmm format for longitude into dd.dddd format
 
-To convert into dd.dddd format, the following conversion is done:
-dd + mm.mmmm/60 for latitude
-ddd + mm.mmmm/60 for longitude
+* To convert into dd.dddd format, the following conversion is done:
+* dd + mm.mmmm/60 for latitude
+* ddd + mm.mmmm/60 for longitude
 
-The obtained data as senn in the terminal window for the $GPRMC string in ddmm.mmmm format is Latitude = 1531.19383 N,  Longitude = 07455.64128 E
+*The obtained data as seen in the terminal window for the $GPRMC string in ddmm.mmmm format is Latitude = 1531.19383 N,  Longitude = 07455.64128 E
 
-Converting the latitude to dd.dddd format:   15 + 31.1938/60  = 15.5198 N
-Converting the longitude to dd.dddd format:  074 +55.6412/60 =  74.9273 E
+* Converting the latitude to dd.dddd format:   15 + 31.1938/60  = 15.5198 N
+* Converting the longitude to dd.dddd format:  074 +55.6412/60 =  74.9273 E
 
-Entering the co-ordinates 15.5198 N 74.9273 E into google maps displays the adress which matches with the actual co-ordinates:
+* Entering the co-ordinates 15.5198 N 74.9273 E into google maps displays the adress which matches with the actual co-ordinates:
 
-<img src="images/gps_location.png" alt="GPS location as seen on Google Maps" width="650"/>
+<img src="images/gps_location.png" alt="GPS location as seen on Google Maps" width="950"/>
 
 *GPS location as seen on Google Maps*
 

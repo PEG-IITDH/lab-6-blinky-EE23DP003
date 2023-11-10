@@ -24,6 +24,7 @@ void Data_Parse(void);     // GPS Data Parse Function
 void Data_Send(void);      // UART5 Send Data Function
 
 char gps_str[100];       // GPS string data
+char str[1];             // UART0 send string char argument
 volatile int state;      // state 0 = wait for $; state 1 = check for GPGLL; state 2 = Read till '\r';
 volatile int pos=0;      // index for gps_str
 
@@ -37,8 +38,8 @@ void main(void)
     SYSCTL_RCGCGPIO_R |= (1<<5);      // Enable and provide a clock to GPIO Port F (LED's)
     SYSCTL_RCGCGPIO_R |= (1<<4);      // Enable and provide a clock to GPIO Port E (UART 5)
     SYSCTL_RCGCUART_R |= (1<<5);      // Enable and provide a clock to UART module 5 in Run mode
-    SYSCTL_RCGCUART_R |= 0x01;        // Enable UART0 (Data Transmit to view in Terminal)
-    SYSCTL_RCGCGPIO_R |= 0x01;        // Enable and provide a clock to GPIO Port A (UART0)
+    SYSCTL_RCGCUART_R |= (1<<0);        // Enable UART0 (Data Transmit to view in Terminal)
+    SYSCTL_RCGCGPIO_R |= (1<<0);        // Enable and provide a clock to GPIO Port A (UART0)
 
 
     PortF_Config();      // GPIO PORTF Configuration
@@ -46,8 +47,9 @@ void main(void)
     PortA_Config();     // GPIO PORTA Configuration
     UART_Config();      // UART5 and UART0 Configuration
 
-    while(1){
-        Data_Parse();   // Parse (Seperate Data) from GPS string
+    while(1)
+        {
+        Data_Parse();   // Parse (Separate Data) from GPS string
         Data_Send();    // Transmit parsed GPS data to UART0
         }
 }
@@ -67,12 +69,13 @@ void Data_Parse(void)
      */
 
     index = 0;                          // index for parseValue initialised to 0
-    token = strtok(gps_str, sep);       // Seperate 'gps_str' string into tokens with delimiter as ','
+    token = strtok(gps_str, sep);       // Separate 'gps_str' string into tokens with delimiter as ','
     while (token != NULL)               // While token is not empty
     {
         //parseValue is a matrix where the data is stored token wise in rows
         strcpy(parseValue[index], token);   // Copy data from token to parseValue[index]
         token = strtok(NULL, sep);          // Increment the index to read next parseValue[index]
+        index++;                            //Go to next row
     }
 }
 
@@ -155,7 +158,7 @@ void UART_Config(void)
     UART0_LCRH_R = (UART_LCRH_WLEN_8 | UART_LCRH_FEN); // 8-bit word length, enable FIFO
     UART0_CTL_R |= (UART_CTL_UARTEN | UART_CTL_RXE | UART_CTL_TXE); // Enable UART0, RX, and TX
 
-    state=0;   // initialise state as 0
+    state=0;   // initialize state as 0
 }
 
 void PortE_Config(void)
@@ -173,9 +176,9 @@ void PortA_Config(void)
     GPIO_PORTA_LOCK_R = 0x4C4F434B; // Unlock PortA register
     GPIO_PORTA_CR_R = 0xFF;         // Enable Commit function
     GPIO_PORTA_DEN_R = 0xFF;        // Enable all pins on port A
-    GPIO_PORTA_DIR_R |= (1 << 1);    // Define PE1 as output
-    GPIO_PORTA_AFSEL_R |= 0x03;      // Enable Alternate function for PE0 and PE1
-    GPIO_PORTA_PCTL_R = (GPIO_PORTA_PCTL_R & 0xFFFFFF00) | 0x00000011; // Selecting UART function for PE0 and PE1
+    GPIO_PORTA_DIR_R |= (1 << 1);    // Define PA1 as output
+    GPIO_PORTA_AFSEL_R |= 0x03;      // Enable Alternate function for PA0 and PA1
+    GPIO_PORTA_PCTL_R = (GPIO_PORTA_PCTL_R & 0xFFFFFF00) | 0x00000011; // Selecting UART function for PA0 and PA1
 }
 
 void UART0_SendString(char *str)       // UART0 String Send Function
@@ -203,14 +206,12 @@ void UART_Handler(void)          // UART Receive interrupt handler
         gps_str[pos] = UART5_DR_R;  // Send UART5 Data Register
         if(gps_str[pos]=='$')
         {
-            state=1;        // Change state to 1 if '$' receieved
+            state=1;        // Change state to 1 if '$' received
             pos++;         // increment pos value
         }
         else
         {
-            pos=0;                // Keep pos value as '0' if  '$' not receieved
-            UART5_ICR_R |= (1<<4);   // Clear UART5 Rx Interrupt
-            UART5_IM_R |= (1<<4);   // UnMask (Enable) UART5 Rx interrupt
+            pos=0;                // Keep pos value as '0' if  '$' not received
         }
     }
 
@@ -234,8 +235,6 @@ void UART_Handler(void)          // UART Receive interrupt handler
                 pos = 0;    // Change 'pos' to 0 if 'GPGLL' not received
             }
         }
-        UART5_ICR_R |= (1<<4);                  // Clear UART5 Rx Interrupt
-        UART5_IM_R |= (1<<4);                   // UnMask (Enable) UART5 Rx interrupt
     }
 
     if(state == 2)          // state 2 = Read till '\r'
@@ -256,8 +255,7 @@ void UART_Handler(void)          // UART Receive interrupt handler
 
 
     GPIO_PORTF_DATA_R = Off;                // Turn off all LED's
-    UART5_ICR_R |= (1<<4);                  // Clear UART Rx Interrupt
-    UART5_IM_R |= (1<<4);                   // UnMask (Enable) UART Rx interrupt
+    UART5_ICR_R |= (1<<4);                 // Clear UART Rx Interrupt
+    UART5_IM_R |= (1<<4);                 // UnMask (Enable) UART Rx interrupt
 
 }
-

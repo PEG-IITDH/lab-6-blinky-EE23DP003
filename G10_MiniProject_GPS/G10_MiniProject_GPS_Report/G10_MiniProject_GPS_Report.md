@@ -3,299 +3,79 @@
 Group 10: EE23DP003 Daniel Dsa; 222021006 Pradeep Kumar M
 
 ## Aim:
-To implement UART based communication on the TM4C123GH6PM microcontroller to recieve serial data from a Ublox Neo-6M GPS module. 
-Parse the NMEA string and transmit the value of date, time, latitude and longitude through UART0 that can be viewed in the serial terminal window in CCS.
+* To implement UART based communication on the TM4C123GH6PM microcontroller to continuously recieve serial data from a Ublox Neo-6M GPS module. 
+* To parse the NMEA string ($GPGLL and $GPRMC) and transmit the value of date, time, latitude and longitude through UART0 that can be viewed in the serial terminal window in CCS.
 
 ## Program flow:
-* Configure the TM4C123GH6PM to enable UART communication at 9600 baud rate with odd parity on UART0 and UART5.
-* Enable UART5 Receive Interrupts and go to the appropriate 'state' in the UART5 handler when the UART5 interrupt is received.
+* Configure the TM4C123GH6PM to enable UART communication at 9600 baud rate with odd parity on UART0 and UART5. Enable UART5 receive interrupt.
+* Go to the appropriate 'state' in the UART5 handler when the UART5 interrupt is received.
 * The states in the UART handler are defined as follows: state 0 = wait for $; state 1 = check for GPGLL; state 2 = Read till '\r'.
 * In main program, continuously call the 'Data_Parse()' and 'Data_Send()' functions.
- 'Data_Parse()' function seperates the GPS data into tokens based on the ',' seperator. 'Data_Send()' function sends the GPS data (date, time, latitude, longitude) over UART0 that can be viewed in the serial terminal window. 
+* 'Data_Parse()' function seperates the GPS data into tokens based on the ',' seperator. 
+* 'Data_Send()' function sends the GPS data (date, time, latitude, longitude) over UART0 that can be viewed in the serial terminal window. 
+
+## Flowchart:
+<img src="images/Mini_Project_Flowchart.png" alt="Mini Project Flowchart for GPS" width="650"/>
+
+*Flowchart for reception, parsing the and transmitting GPS data back on UART*
 
 
+## Description of the Neo-6M GPS module:
 
-## UART Protocol on TM4C123GH6PM:
+* The GPS module is from U-blox – NEO-6M. It can track up to 22 satellites over 50 channels and achieve tracking sensitivity of -161 dB, while consuming 45 mA current.
 
-## Algorithm:
-The algorithm for implementing UART data transmit and receive is shown in the stateflow diagram below:
+*The required data pins of the NEO-6M GPS chip are broken out to a 0.1″ pitch headers. It contains the pins needed for communication with the microcontroller over UART. The module supports baud rates from 4800bps to 230400bps with a default baud of 9600.
 
+<img src="images/neo6m.png" alt="neo6m GPS module" width="650"/>
 
-
-## Code:
-
-	/* Mini Project: Send the values of Latitute, Latitude and Time by parsing $GPGLL string received from Neo-6M GPS module
- 	* Using PE4 (Rx), PE5 (Tx): UART Module 5
-	*/
-
-	#include <stdint.h>
-	#include <stdbool.h>
-	#include <stdio.h>
-	#include <string.h>
-	#include <stdlib.h>
-	#include "tm4c123gh6pm.h"
-
-	#define Red 0X02    // Red LED: PF1
-	#define Blue 0X04   // Blue LED: PF2
-	#define Green 0X08  // Green LED: PF3
-	#define Off 0x00    // LED's off
-
-	void PortF_Config(void);   // PORTF GPIO configuration (LED's)
-	void PortE_Config(void);   // PORTE GPIO configuration (UART5 for GPS module)
-	void PortA_Config(void);   // PORTA GPIO configuration (UART0 Send Data)
-	void UART_Config(void);    // UART5 (GPS) and UART0 (Tx Data) Configuration
-	void UART0_SendString(char *str);  // UART0 transmit string
-	void UART_Handler(void);   // UART5 Receive Interrupt (GPS Module)
-	void Data_Parse(void);     // GPS Data Parse Function
-	void Data_Send(void);      // UART5 Send Data Function
-
-	char gps_str[100];       // GPS string data
-	volatile int state;      // state 0 = wait for $; state 1 = check for GPGLL; state 2 = Read till '\r';
-	volatile int pos=0;      // index for gps_str
-
-	char latitudeResult[10], longitudeResult[10], parseValue[12][20], *token, date[9], *time, currentTime[9];
-	double latitude = 0.0, longitude = 0.0, seconds = 0.0, result = 0.0, minutes = 0.0;
-	const char sep[1] = ",";                       //Data Separator
-	int index = 0, degrees, i = 0, j = 0;
-
-	void main(void)
-	{
-    	SYSCTL_RCGCGPIO_R |= (1<<5);      // Enable and provide a clock to GPIO Port F (LED's)
-    	SYSCTL_RCGCGPIO_R |= (1<<4);      // Enable and provide a clock to GPIO Port E (UART 5)
-    	SYSCTL_RCGCUART_R |= (1<<5);      // Enable and provide a clock to UART module 5 in Run mode
-    	SYSCTL_RCGCUART_R |= 0x01;        // Enable UART0 (Data Transmit to view in Terminal)
-    	SYSCTL_RCGCGPIO_R |= 0x01;        // Enable and provide a clock to GPIO Port A (UART0)
+*NEO-6M GPS module and antenna*
 
 
-    	PortF_Config();      // GPIO PORTF Configuration
-    	PortE_Config();     // GPIO PORTE Configuration
-    	PortA_Config();     // GPIO PORTA Configuration
-    	UART_Config();      // UART5 and UART0 Configuration
+## Parsing NMEA (National Marine Electronics Association) GPS Sentences:
 
-    	while(1){
-        	Data_Parse();   // Parse (Seperate Data) from GPS string
-        	Data_Send();    // Transmit parsed GPS data to UART0
-        	}
-	}
+Parsing is extracting chunks of data from the NMEA sentence.
 
-	void Data_Parse(void)
-	{
-    	/*Parse the GPS $GPGLL Data
-     	* 0 $GPGLL
-     	* 1 Latitude 1531.13797
-     	* 2 N
-     	* 3 Longitude 07455.55473
-     	* 4 E
-     	* 5 UTC Time 063153.00
-     	* 6 Data Valid A
-     	* 7 Mode and Checksum A*65
-     	* last character gps_str[50]
-     	*/
+There are many sentences in the NMEA standard. The two types of GPS NMEA sentences parsed in this project are $GPGLL and $GPRMC:
 
-    	index = 0;                          // index for parseValue initialised to 0
-    	token = strtok(gps_str, sep);       // Seperate 'gps_str' string into tokens with delimiter as ','
-    	while (token != NULL)               // While token is not empty
-    		{
-        	//parseValue is a matrix where the data is stored token wise in rows
-        	strcpy(parseValue[index], token);   // Copy data from token to parseValue[index]
-        	token = strtok(NULL, sep);          // Increment the index to read next parseValue[index]
-    		}
-	}
+$GPGLL provides time, latitude, longitude.
+$GPRMC provides time, date, latitude, longitude, altitude, and estimated velocity.
 
-	void Data_Send(void)
-	{
-    	// If parseValue[6] = A, the data is valid. If V, the data is not valid.
-    	if (strcmp(parseValue[6], "A") == 0)      // strcmp returns 0 if the two strings match
-    	{
-        	//Send Latitude data
-        	UART0_SendString("Latitude = ");    // Send String "Latitude"
-        	UART0_SendString(parseValue[1]);   // Latitude value is parseValue[1] in ddmm.mmmm format
-        	UART0_SendString(" ");
-        	UART0_SendString(parseValue[2]);   // Send Latitude N/S indicator
-        	UART0_SendString(" ");
-        	UART0_SendString(";");
-        	UART0_SendString(" ");
+<img src="images/GPLL_Table.png" alt="GPGLL Table" width="650"/>
 
+*Geographic Position Latitude / Longitude (GPGLL) NMEA Sentence Table*
 
-        	// Send Longitude
-        	UART0_SendString("Longitude = "); // Send string "Longitude"
-        	UART0_SendString(parseValue[3]);  // Longitude value is parseValue[3] in dddmm.mmmm format
-        	UART0_SendString(" ");
-        	UART0_SendString(parseValue[4]);  // Send Longitude E/W indicator
-        	UART0_SendString(" ");
-        	UART0_SendString(";");
-        	UART0_SendString(" ");
+<img src="images/GPRMC.png" alt="GPRMC Table" width="650"/>
 
-        	// Send Time
-        	UART0_SendString("Time = ");      // Send string "Time"
-        	UART0_SendString(parseValue[5]); // Time value is parseValue[5] in hhmmss.sss UTC format
-        	UART0_SendString(" ");
-        	UART0_SendString("UTC");
-        	UART0_SendString(" ");
-        	UART0_SendString(";");
-        	UART0_SendString(" ");
-
-        	UART0_SendString("\n \r "); // New Line, Carriage Return
-    	}
-	}
-
-	void PortF_Config(void)
-	{
-    	GPIO_PORTF_LOCK_R = 0x4C4F434B;     // Unlock PortF register
-    	GPIO_PORTF_CR_R = 0x1F;             // Enable Commit function
-
-    	GPIO_PORTF_PUR_R = 0x11;            // Pull-up for user switches
-    	GPIO_PORTF_DEN_R = 0x1F;            // Enable all pins on port F
-    	GPIO_PORTF_DIR_R = 0x0E;            // Define PortF LEDs as output and switches as input
-	}
-
-	void UART_Config(void)
-	{
-    	/*
-    	*BRDI = integer part of the BRD; BRDF = fractional part
-    	*BRD = BRDI + BRDF = UARTSysClk / (ClkDiv * Baud Rate)
-    	*UARTSysClk = 16MHz, ClkDiv = 16, Baud Rate = 9600
-    	*BRD = 104.167; BRDI = 104; BRDF = 167;
-    	*UARTFBRD[DIVFRAC] = integer(BRDF * 64 + 0.5) = 11
-    	*/
-
-    	//PortE (UART5) configuration
-    	UART5_CTL_R &= (0<<0);                       //Disable UART module 5
-    	UART5_IBRD_R = 104;                          // Integer part of BRD
-    	UART5_FBRD_R = 11;                           // Fractional part of BRD
-    	UART5_CC_R = 0x00;                           // System Clock
-    	UART5_LCRH_R |= 0x60;                        // 8 bit word length, FIFO disable, Parity disable
-    	UART5_CTL_R |= ((1<<0)|(1<<8)|(1<<9));      // Enable UART module 5, TXE (bit 8)  and RXE (bit 9)
-
-    	//UART5 interrupt configuration
-    	UART5_IM_R &= ((0<<4)|(0<<5)|(0<<8));       // Mask Tx, Rx and Parity interrupts
-    	UART5_ICR_R &= ((0<<4)|(0<<5)|(0<<8));      // Clear Tx, Rx and Parity interrupts
-    	UART5_IM_R |= (1<<4);                       // Enable Rx interrupt
-   	NVIC_EN1_R |= (1<<29);                      // Interrupts enabled for UART5
-    	NVIC_PRI15_R &= 0xFFFF5FFF;                 // Interrupt Priority 2 to UART5
-
-    	//PortA (UART0) configuration
-    	UART0_CTL_R &= ~UART_CTL_UARTEN; // Disable UART0 during configuration
-    	UART0_IBRD_R = 104;              // Integer part of the baud rate
-    	UART0_FBRD_R = 11;               // Fractional part of the baud rate
-    	UART0_LCRH_R = (UART_LCRH_WLEN_8 | UART_LCRH_FEN); // 8-bit word length, enable FIFO
-    	UART0_CTL_R |= (UART_CTL_UARTEN | UART_CTL_RXE | UART_CTL_TXE); // Enable UART0, RX, and TX
-
-    	state=0;   // initialise state as 0
-	}
-
-	void PortE_Config(void)
-	{
-    	GPIO_PORTE_LOCK_R = 0x4C4F434B;     // Unlock PortE register
-    	GPIO_PORTE_CR_R = 0xFF;             // Enable Commit function
-    	GPIO_PORTE_DEN_R = 0xFF;            // Enable all pins on port E
-    	GPIO_PORTE_DIR_R |= (1<<5);         // Define PE5 as output
-    	GPIO_PORTE_AFSEL_R |= 0x30;         // Enable Alternate function for PE4 and PE5
-    	GPIO_PORTE_PCTL_R |= 0x00110000;    // Selecting UART function for PE4 and PE5
-	}
-
-	void PortA_Config(void)
-	{
-    	GPIO_PORTA_LOCK_R = 0x4C4F434B; // Unlock PortA register
-    	GPIO_PORTA_CR_R = 0xFF;         // Enable Commit function
-    	GPIO_PORTA_DEN_R = 0xFF;        // Enable all pins on port A
-    	GPIO_PORTA_DIR_R |= (1 << 1);    // Define PE1 as output
-    	GPIO_PORTA_AFSEL_R |= 0x03;      // Enable Alternate function for PE0 and PE1
-    	GPIO_PORTA_PCTL_R = (GPIO_PORTA_PCTL_R & 0xFFFFFF00) | 0x00000011; // Selecting UART function for PE0 and PE1
-	}
-
-	void UART0_SendString(char *str)       // UART0 String Send Function
-	{
-    		while (*str)
-    		{
-        	// Send each character of the string
-        	while ((UART0_FR_R & 0x20) != 0); // Wait as long as Transmit FIFO (TXFF) is full
-        	UART0_DR_R = *str; // Send the character to UART0 Data Register
-        	str++;             // Go to next character in the string
-    		}
-	}
-
-
-	void UART_Handler(void)          // UART Receive interrupt handler
-	{
-   	 UART5_IM_R &= (0<<4);       // Mask UART5 Rx interrupt
-
-    	// state 0 = wait for '$'; state 1 = check for GPGLL received; state 2 = Read till '\r'
-
-    	if(state == 0)                    // state 0 = wait for '$'
-    	{
-        	GPIO_PORTF_DATA_R = Red;      // Turn on RED LED
-        	pos=0;                       // position index for gps_str
-        	gps_str[pos] = UART5_DR_R;  // Send UART5 Data Register
-        	if(gps_str[pos]=='$')
-        	{
-            	state=1;        // Change state to 1 if '$' receieved
-            	pos++;         // increment pos value
-        	}
-        	else
-        	{
-            	pos=0;                // Keep pos value as '0' if  '$' not receieved
-            	UART5_ICR_R |= (1<<4);   // Clear UART5 Rx Interrupt
-            	UART5_IM_R |= (1<<4);   // UnMask (Enable) UART5 Rx interrupt
-        	}
-    	}
-
-    	if(state == 1)                 // state 1 = check if GPGLL received
-    	{
-        	GPIO_PORTF_DATA_R = Blue; // Turn on Blue LED (PF3) in state 1
-
-        	gps_str[pos]=UART5_DR_R;  // Assign UART5 Data Register value to gps_str[pos]
-        	pos++;                    // Increment pos value
-
-        	if(pos==7)               // Check if pos value is 7
-        	{
-            		if((gps_str[2] == 'G') && (gps_str[3] == 'P') && (gps_str[4] == 'G') && (gps_str[5] == 'L') && (gps_str[6] == 'L'))  // Check if GPGLL received
-            		{
-                	state = 2;  // Change state to 2 if 'GPGLL' received
-                	pos--;      // Decrement position by 1
-            		}
-            		else
-            		{
-                	state = 0;  // Change 'state' to 0 if 'GPGLL' not received
-                	pos = 0;    // Change 'pos' to 0 if 'GPGLL' not received
-            		}
-        	}
-        	UART5_ICR_R |= (1<<4);                  // Clear UART5 Rx Interrupt
-        	UART5_IM_R |= (1<<4);                   // UnMask (Enable) UART5 Rx interrupt
-    	}
-
-    	if(state == 2)          // state 2 = Read till '\r'
-    	{
-        	GPIO_PORTF_DATA_R = Green;  // Turn on GREEN LED (PF2) in state 2
-        	gps_str[pos]=UART5_DR_R;    // Assign UART5 Data Register value to gps_str[pos]
-
-        	if((gps_str[pos]=='\r') || (gps_str[pos]=='\n'))  // Check if gps_str[pos] = Carriage return (\r)
-        	{
-            	state=0;  // Change state to 0
-            	pos=0;    // Change pos to 0
-        	}
-        	else
-        	{
-            	pos++;  // increase pos value if gps_str[pos] not equal to '\r'
-        	}
-    	}
-
-
-    	GPIO_PORTF_DATA_R = Off;                // Turn off all LED's
-    	UART5_ICR_R |= (1<<4);                  // Clear UART Rx Interrupt
-    	UART5_IM_R |= (1<<4);                   // UnMask (Enable) UART Rx interrupt
-
-	}
-
-
-
-
+*Recommended Minimum Specific GNSS Data (GPRMC) NMEA Sentence Table*
 
 ## Results:
-The pins PE4 (U5Rx) is connected to the Tx pin of the Neo-6M GPS module. The parsed data is transmitted over UART0 pin PA1(Tx) and can be viewed in the serial termnial window.
+* The pins PE4 (U5Rx) on the TM4C123GH6PM microcontroller is connected to the Tx pin of the NEO-6M GPS module. The parsed data is transmitted over UART0 pin PA1(Tx) and can be viewed in the serial termnial window in Code Composer Studio.
 
-<img src="images/GPGLL_String.png" alt="GPGLL string received on UART5 " width="650"/>
+<img src="images/GPGLL.jpg" alt="GPGLL string received on UART5 " width="650"/>
 
-*'gps_str' string values*
+*Display of Latitude, Longitude and Time in Serial Terminal window after parsing $GPGLL string*
+
+<img src="images/GPGLL.jpg" alt="GPGLL string received on UART5 " width="650"/>
+
+*Display of Latitude, Longitude, Time. Date and Sppeed in Serial Terminal window after parsing $GPRMC string*
+
+
+* The latitude and longitude data seen in the terminal window for the GPRMC or GPGLL data can be viewed in Google maps by converting the ddmm.mmmm format for latitude and dddmm.mmmm format for longitude into dd.dddd format
+
+To convert into dd.dddd format, the following conversion is done:
+dd + mm.mmmm/60 for latitude
+ddd + mm.mmmm/60 for longitude
+
+The obtained data as senn in the terminal window for the $GPRMC string in ddmm.mmmm format is Latitude = 1531.19383 N,  Longitude = 07455.64128 E
+
+Converting the latitude to dd.dddd format:   15 + 31.1938/60  = 15.5198 N
+Converting the longitude to dd.dddd format:  074 +55.6412/60 =  74.9273 E
+
+Entering the co-ordinates 15.5198 N 74.9273 E into google maps displays the adress which matches with the actual co-ordinates:
+
+<img src="images/gps_location.png" alt="GPS location as seen on Google Maps" width="650"/>
+
+*GPS location as seen on Google Maps*
+
 
 

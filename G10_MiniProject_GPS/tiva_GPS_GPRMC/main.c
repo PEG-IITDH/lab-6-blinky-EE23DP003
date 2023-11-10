@@ -24,6 +24,7 @@ void Data_Parse(void);     // GPS Data Parse Function
 void Data_Send(void);      // UART5 Send Data Function
 
 char gps_str[100];       // GPS string data
+char str[1];             // UART0 send string char argument
 volatile int state;      // state 0 = wait for $; state 1 = check for GPGLL; state 2 = Read till '\r';
 volatile int pos=0;      // index for gps_str
 
@@ -80,6 +81,7 @@ void Data_Parse(void)
         //parseValue is a matrix where the data is stored token wise in rows
         strcpy(parseValue[index], token);   // Copy data from token to parseValue[index]
         token = strtok(NULL, sep);          // Increment the index to read next parseValue[index]
+        index++;                            //Go to next row
     }
 }
 
@@ -117,10 +119,18 @@ void Data_Send(void)
         UART0_SendString(";");
         UART0_SendString(" ");
 
-        //Send Time
+        //Send Date
         UART0_SendString("Date = ");     // Send string "Date"
         UART0_SendString(parseValue[9]); // Date value is parseValue[9] in ddmmyy format
         UART0_SendString(" ");
+        UART0_SendString(";");
+        UART0_SendString(" ");
+
+        //Send Speed Over Ground
+        UART0_SendString("Speed = ");     // Send string "Speed "
+        UART0_SendString(parseValue[7]); // Speed value is parseValue[7]
+        UART0_SendString(" ");
+        UART0_SendString("Knots");
         UART0_SendString(";");
         UART0_SendString(" ");
 
@@ -188,9 +198,9 @@ void PortA_Config(void)   // Port A configuration (UART0)
     GPIO_PORTA_LOCK_R = 0x4C4F434B;    // Unlock PortA register
     GPIO_PORTA_CR_R = 0xFF;           // Enable Commit function
     GPIO_PORTA_DEN_R = 0xFF;         // Enable all pins on port A
-    GPIO_PORTA_DIR_R |= (1 << 1);   // Define PE1 as output
-    GPIO_PORTA_AFSEL_R |= 0x03;    // Enable Alternate function for PE0 and PE1
-    GPIO_PORTA_PCTL_R = (GPIO_PORTA_PCTL_R & 0xFFFFFF00) | 0x00000011; // Selecting UART function for PE0 and PE1
+    GPIO_PORTA_DIR_R |= (1 << 1);   // Define PA1 as output
+    GPIO_PORTA_AFSEL_R |= 0x03;    // Enable Alternate function for PA0 and PA1
+    GPIO_PORTA_PCTL_R = (GPIO_PORTA_PCTL_R & 0xFFFFFF00) | 0x00000011; // Selecting UART function for PA0 and PA1
 }
 
 void UART0_SendString(char *str)       // UART0 String Send Function
@@ -215,7 +225,7 @@ void UART_Handler(void)         // UART Receive interrupt handler
     {
         GPIO_PORTF_DATA_R = Red;      // Turn on RED LED
         pos=0;                        // position index for gps_str
-        gps_str[pos]=UART5_DR_R;      // Send UART5 Data Registe
+        gps_str[pos]=UART5_DR_R;      // Send UART5 Data Register
         if(gps_str[pos]=='$')
         {
             state=1;        // Change state to 1 if '$' receieved
@@ -224,8 +234,8 @@ void UART_Handler(void)         // UART Receive interrupt handler
         else
         {
             pos=0;
-            UART5_ICR_R |= (1<<4);                  //Clear UART Rx Interrupt
-            UART5_IM_R |= (1<<4);                   //UnMask UART Rx interrupt
+            //UART5_ICR_R |= (1<<4);                  //Clear UART Rx Interrupt
+            //UART5_IM_R |= (1<<4);                   //UnMask UART Rx interrupt
         }
     }
 
@@ -249,8 +259,8 @@ void UART_Handler(void)         // UART Receive interrupt handler
                 pos = 0;    // Change 'pos' to 0 if 'GPGLL' not received
             }
        }
-        UART5_ICR_R |= (1<<4);     // Clear UART Rx Interrupt
-        UART5_IM_R |= (1<<4);     // UnMask UART Rx interrupt
+        //UART5_ICR_R |= (1<<4);     // Clear UART Rx Interrupt
+        //UART5_IM_R |= (1<<4);     // UnMask UART Rx interrupt
 
     }
 
@@ -268,9 +278,8 @@ void UART_Handler(void)         // UART Receive interrupt handler
         {
             pos++;  // increase 'pos' value if gps_str[pos] not equal to '\r'
         }
-
-        GPIO_PORTF_DATA_R = Off;                // Turn off all LED's
-        UART5_ICR_R |= (1<<4);                  // Clear UART Rx Interrupt
-        UART5_IM_R |= (1<<4);                   // UnMask (Enable) UART Rx interrupt
     }
+    GPIO_PORTF_DATA_R = Off;                // Turn off all LED's
+    UART5_ICR_R |= (1<<4);                  // Clear UART Rx Interrupt
+    UART5_IM_R |= (1<<4);                   // UnMask (Enable) UART Rx interrupt
 }

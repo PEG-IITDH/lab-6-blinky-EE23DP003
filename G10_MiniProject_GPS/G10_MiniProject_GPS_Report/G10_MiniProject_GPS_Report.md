@@ -71,7 +71,7 @@ $GPRMC provides time, date, latitude, longitude, altitude, and estimated velocit
 * Converting the latitude to dd.dddd format:   15 + 31.1938/60  = 15.5198 N
 * Converting the longitude to dd.dddd format:  074 +55.6412/60 =  74.9273 E
 
-* Entering the co-ordinates 15.5198 N 74.9273 E into google maps displays the adress which matches with the actual co-ordinates:
+* Entering the co-ordinates 15.5198 N 74.9273 E into google maps displays the address which closely matches with the actual location:
 
 <img src="images/gps_location.png" alt="GPS location as seen on Google Maps" width="950"/>
 

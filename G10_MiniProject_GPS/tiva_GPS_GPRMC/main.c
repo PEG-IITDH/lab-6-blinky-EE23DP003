@@ -14,24 +14,23 @@
 #define Green 0X08  // Green LED: PF3
 #define Off 0x00    // LED's off
 
-void PortF_Config(void);   // PORTF GPIO configuration (LED's)
-void PortE_Config(void);   // PORTE GPIO configuration (UART5 for GPS module)
+void PortF_Config(void);     // PORTF GPIO configuration (LED's)
+void PortE_Config(void);    // PORTE GPIO configuration (UART5 for GPS module)
 void PortA_Config(void);   // PORTA GPIO configuration (UART0 Send Data)
-void UART_Config(void);    // UART5 (GPS) and UART0 (Tx Data) Configuration
+void UART_Config(void);   // UART5 (GPS) and UART0 (Tx Data) Configuration
 void UART0_SendString(char *str);  // UART0 transmit string
 void UART_Handler(void);   // UART5 Receive Interrupt (GPS Module)
-void Data_Parse(void);     // GPS Data Parse Function
-void Data_Send(void);      // UART5 Send Data Function
+void Data_Parse(void);    // GPS Data Parse Function
+void Data_Send(void);     // UART5 Send Data Function
 
-char gps_str[100];       // GPS string data
-char str[1];             // UART0 send string char argument
-volatile int state;      // state 0 = wait for $; state 1 = check for GPGLL; state 2 = Read till '\r';
-volatile int pos=0;      // index for gps_str
+char gps_str[100];            // GPS string data
+char str[1];                 // UART0 send string char argument
+char parseValue[12][20], *token;  // parseValue has 12 subarrays each 20 character wide. token = parsed data
+const char sep[1] = ",";    //Data Separator
+volatile int state = 0;    // state 0 = wait for $; state 1 = check for GPGLL; state 2 = Read till '\r';
+volatile int pos = 0;     // index for gps_str
+volatile int index = 0;  // index for parse value
 
-char latitudeResult[10], longitudeResult[10], parseValue[12][20], *token, date[9], *time, currentTime[9];
-double latitude = 0.0, longitude = 0.0, seconds = 0.0, result = 0.0, minutes = 0.0;
-const char sep[1] = ",";                       // Data Separator
-int index = 0, degrees, i = 0, j = 0;
 
 void main(void)
 {
@@ -75,10 +74,10 @@ void Data_Parse(void)
      */
 
     index = 0;                          // index for parseValue initialised to 0
-    token = strtok(gps_str, sep);       // Seperate 'gps_str' string into tokens with delimiter as ','
+    token = strtok(gps_str, sep);       // Separate 'gps_str' string into tokens with delimiter as ','
     while (token != NULL)               // While token is not empty
     {
-        //parseValue is a matrix where the data is stored token wise in rows
+        // parseValue has 12 subarrays each 20 character wide. token = parsed data
         strcpy(parseValue[index], token);   // Copy data from token to parseValue[index]
         token = strtok(NULL, sep);          // Increment the index to read next parseValue[index]
         index++;                            //Go to next row
@@ -180,7 +179,7 @@ void UART_Config(void)                  // UART5 and UART0 Configuration
     UART0_LCRH_R = (UART_LCRH_WLEN_8 | UART_LCRH_FEN); // 8-bit word length, enable FIFO
     UART0_CTL_R |= (UART_CTL_UARTEN | UART_CTL_RXE | UART_CTL_TXE); // Enable UART0, RX, and TX
 
-    state=0;                     // initialise state as 0
+    state=0;                     // initialize state as 0
 }
 
 void PortE_Config(void)      // PORTE (UART 5) Configuration

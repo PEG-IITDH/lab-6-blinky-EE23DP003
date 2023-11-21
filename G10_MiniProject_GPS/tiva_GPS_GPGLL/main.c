@@ -146,9 +146,10 @@ void UART_Config(void)
     UART5_IM_R &= ((0<<4)|(0<<5)|(0<<8));       // Mask Tx, Rx and Parity interrupts
     UART5_ICR_R &= ((0<<4)|(0<<5)|(0<<8));      // Clear Tx, Rx and Parity interrupts
     UART5_IM_R |= (1<<4);                       // Enable Rx interrupt
-    NVIC_EN1_R |= (1<<29);                      // Interrupts enabled for UART5
-    NVIC_PRI15_R &= 0xFFFF5FFF;                 // Interrupt Priority 2 to UART5
-
+    /* Prioritize and enable interrupt in NVIC */
+    NVIC_EN1_R |= (1<<29);                      // Interrupt no 61 enabled for UART5
+    NVIC_PRI15_R = (NVIC_PRI15_R & 0xFFFF1FFF) | (2<<13); // Interrupt Priority Register 15 for Interrupt 61
+                                                // bits 13-15 for interrupt 61 (UART5)
     //PortA (UART0) configuration
     UART0_CTL_R &= ~UART_CTL_UARTEN; // Disable UART0 during configuration
     UART0_IBRD_R = 104;              // Integer part of the baud rate
@@ -183,7 +184,7 @@ void UART0_SendString(char *str)       // UART0 String Send Function
     while (*str)
     {
         // Send each character of the string
-        while ((UART0_FR_R & 0x20) != 0); // Wait as long as Transmit FIFO (TXFF) is full
+        while ((UART0_FR_R & 0x20) == 1); // Wait as long as Transmit FIFO (TXFF) is full
         UART0_DR_R = *str; // Send the character to UART0 Data Register
         str++;             // Go to next character in the string
     }

@@ -14,31 +14,32 @@
 #define Green 0X08  // Green LED: PF3
 #define Off 0x00    // LED's off
 
-void PortF_Config(void);     // PORTF GPIO configuration (LED's)
-void PortE_Config(void);    // PORTE GPIO configuration (UART5 for GPS module)
+void PortF_Config(void);   // PORTF GPIO configuration (LED's)
+void PortE_Config(void);   // PORTE GPIO configuration (UART5 for GPS module)
 void PortA_Config(void);   // PORTA GPIO configuration (UART0 Send Data)
-void UART_Config(void);   // UART5 (GPS) and UART0 (Tx Data) Configuration
+void UART_Config(void);    // UART5 (GPS) and UART0 (Tx Data) Configuration
 void UART0_SendString(char *str);  // UART0 transmit string
 void UART_Handler(void);   // UART5 Receive Interrupt (GPS Module)
-void Data_Parse(void);    // GPS Data Parse Function
-void Data_Send(void);     // UART5 Send Data Function
+void Data_Parse(void);     // GPS Data Parse Function
+void Data_Send(void);      // UART5 Send Data Function
 
-char gps_str[100];             // GPS string data
-char str[1];                  // UART0 send string char argument
-char parseValue[12][20], *token;  // parseValue has 12 subarrays each 20 character wide. token = parsed data
-const char sep[1] = ",";    //Data Separator
-volatile int state = 0;    // state 0 = wait for $; state 1 = check for GPGLL; state 2 = Read till '\r';
-volatile int pos = 0;     // index for gps_str
-volatile int index = 0;  // index for parse value
+char gps_str[100];       // GPS string data
+char str[1];             // UART0 send string char argument
+volatile int state;      // state 0 = wait for $; state 1 = check for GPGLL; state 2 = Read till '\r';
+volatile int pos=0;      // index for gps_str
 
+char latitudeResult[10], longitudeResult[10], parseValue[12][20], *token, date[9], *time, currentTime[9];
+double latitude = 0.0, longitude = 0.0, seconds = 0.0, result = 0.0, minutes = 0.0;
+const char sep[1] = ",";                       //Data Separator
+int index = 0, degrees, i = 0, j = 0;
 
 void main(void)
 {
     SYSCTL_RCGCGPIO_R |= (1<<5);      // Enable and provide a clock to GPIO Port F (LED's)
     SYSCTL_RCGCGPIO_R |= (1<<4);      // Enable and provide a clock to GPIO Port E (UART 5)
     SYSCTL_RCGCUART_R |= (1<<5);      // Enable and provide a clock to UART module 5 in Run mode
-    SYSCTL_RCGCUART_R |= (1<<0);      // Enable UART0 (Data Transmit to view in Terminal)
-    SYSCTL_RCGCGPIO_R |= (1<<0);      // Enable and provide a clock to GPIO Port A (UART0)
+    SYSCTL_RCGCUART_R |= (1<<0);        // Enable UART0 (Data Transmit to view in Terminal)
+    SYSCTL_RCGCGPIO_R |= (1<<0);        // Enable and provide a clock to GPIO Port A (UART0)
 
 
     PortF_Config();      // GPIO PORTF Configuration
@@ -64,13 +65,14 @@ void Data_Parse(void)
      * 5 UTC Time 063153.00
      * 6 Data Valid A
      * 7 Mode and Checksum A*65
+     * last character gps_str[50]
      */
 
     index = 0;                          // index for parseValue initialised to 0
     token = strtok(gps_str, sep);       // Separate 'gps_str' string into tokens with delimiter as ','
     while (token != NULL)               // While token is not empty
     {
-        // parseValue has 12 subarrays each 20 character wide. token = parsed data
+        //parseValue is a matrix where the data is stored token wise in rows
         strcpy(parseValue[index], token);   // Copy data from token to parseValue[index]
         token = strtok(NULL, sep);          // Increment the index to read next parseValue[index]
         index++;                            //Go to next row
@@ -146,10 +148,9 @@ void UART_Config(void)
     UART5_IM_R &= ((0<<4)|(0<<5)|(0<<8));       // Mask Tx, Rx and Parity interrupts
     UART5_ICR_R &= ((0<<4)|(0<<5)|(0<<8));      // Clear Tx, Rx and Parity interrupts
     UART5_IM_R |= (1<<4);                       // Enable Rx interrupt
-    /* Prioritize and enable interrupt in NVIC */
-    NVIC_EN1_R |= (1<<29);                      // Interrupt no 61 enabled for UART5
-    NVIC_PRI15_R = (NVIC_PRI15_R & 0xFFFF1FFF) | (2<<13); // Interrupt Priority Register 15 for Interrupt 61
-                                                // bits 13-15 for interrupt 61 (UART5)
+    NVIC_EN1_R |= (1<<29);                      // Interrupts enabled for UART5
+    NVIC_PRI15_R &= 0xFFFF5FFF;                 // Interrupt Priority 2 to UART5
+
     //PortA (UART0) configuration
     UART0_CTL_R &= ~UART_CTL_UARTEN; // Disable UART0 during configuration
     UART0_IBRD_R = 104;              // Integer part of the baud rate
@@ -157,6 +158,7 @@ void UART_Config(void)
     UART0_LCRH_R = (UART_LCRH_WLEN_8 | UART_LCRH_FEN); // 8-bit word length, enable FIFO
     UART0_CTL_R |= (UART_CTL_UARTEN | UART_CTL_RXE | UART_CTL_TXE); // Enable UART0, RX, and TX
 
+    state=0;   // initialize state as 0
 }
 
 void PortE_Config(void)
@@ -184,7 +186,7 @@ void UART0_SendString(char *str)       // UART0 String Send Function
     while (*str)
     {
         // Send each character of the string
-        while ((UART0_FR_R & 0x20) == 1); // Wait as long as Transmit FIFO (TXFF) is full
+        while ((UART0_FR_R & 0x20) != 0); // Wait as long as Transmit FIFO (TXFF) is full
         UART0_DR_R = *str; // Send the character to UART0 Data Register
         str++;             // Go to next character in the string
     }

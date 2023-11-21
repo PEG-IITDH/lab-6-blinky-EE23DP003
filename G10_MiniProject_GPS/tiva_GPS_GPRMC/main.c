@@ -179,7 +179,6 @@ void UART_Config(void)                  // UART5 and UART0 Configuration
     UART0_LCRH_R = (UART_LCRH_WLEN_8 | UART_LCRH_FEN); // 8-bit word length, enable FIFO
     UART0_CTL_R |= (UART_CTL_UARTEN | UART_CTL_RXE | UART_CTL_TXE); // Enable UART0, RX, and TX
 
-    state=0;                     // initialize state as 0
 }
 
 void PortE_Config(void)      // PORTE (UART 5) Configuration
